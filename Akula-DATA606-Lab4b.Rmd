@@ -1,0 +1,317 @@
+---
+title: "Foundations for statistical inference - Confidence intervals"
+author: "Pavan Akula"
+date: "March 10, 2017"
+output:
+  html_document:
+    css: ./lab.css
+    highlight: pygments
+    theme: cerulean
+  pdf_document: default
+---
+
+## Sampling from Ames, Iowa
+
+If you have access to data on an entire population, say the size of every 
+house in Ames, Iowa, it's straight forward to answer questions like, "How big 
+is the typical house in Ames?" and "How much variation is there in sizes of 
+houses?". If you have access to only a sample of the population, as is often 
+the case, the task becomes more complicated. What is your best guess for the 
+typical size if you only know the sizes of several dozen houses? This sort of 
+situation requires that you use your sample to make inference on what your 
+population looks like.
+
+## The data
+
+In the previous lab, ``Sampling Distributions'', we looked at the population data
+of houses from Ames, Iowa. Let's start by loading that data set.
+
+```{r load-data, eval=TRUE}
+load("more/ames.RData")
+```
+
+In this lab we'll start with a simple random sample of size 60 from the 
+population. Specifically, this is a simple random sample of size 60. Note that 
+the data set has information on many housing variables, but for the first 
+portion of the lab we'll focus on the size of the house, represented by the 
+variable `Gr.Liv.Area`.
+
+```{r sample, eval=TRUE}
+population <- ames$Gr.Liv.Area
+samp <- sample(population, 60)
+
+```
+
+1.  Describe the distribution of your sample. What would you say is the 
+"typical" size within your sample? Also state precisely what you interpreted 
+"typical" to mean.
+
+**_A: 1. Sampling distribution size of the sample is 60. Actual size of the population is 2930._**
+
+**_2. After reading chapter 4 of OpenIntro Statistics, I understand sample size consisting of less than 10% of the population is considered as a reliable method to ensure sample observations are independent. In this case, a sample size less than 293 would be regarded as typical size._**
+
+2.  Would you expect another student's distribution to be identical to yours? 
+Would you expect it to be similar? Why or why not?
+
+**_A: Sample function from base R package selects elements on random basis. I would not expect another student's distribution to be identitcal to mine._**
+
+## Confidence intervals
+
+One of the most common ways to describe the typical or central value of a 
+distribution is to use the mean. In this case we can calculate the mean of the 
+sample using,
+
+```{r sample-mean, eval=TRUE}
+sample_mean <- mean(samp)
+```
+
+Return for a moment to the question that first motivated this lab: based on 
+this sample, what can we infer about the population? Based only on this single 
+sample, the best estimate of the average living area of houses sold in Ames 
+would be the sample mean, usually denoted as $\bar{x}$ (here we're calling it 
+`sample_mean`). That serves as a good *point estimate* but it would be useful 
+to also communicate how uncertain we are of that estimate. This can be 
+captured by using a *confidence interval*.
+
+We can calculate a 95% confidence interval for a sample mean by adding and 
+subtracting 1.96 standard errors to the point estimate (See Section 4.2.3 if 
+you are unfamiliar with this formula).
+
+```{r ci, eval=TRUE}
+se <- sd(samp) / sqrt(60)
+lower <- sample_mean - 1.96 * se
+upper <- sample_mean + 1.96 * se
+c(lower, upper)
+```
+
+This is an important inference that we've just made: even though we don't know 
+what the full population looks like, we're 95% confident that the true 
+average size of houses in Ames lies between the values *lower* and *upper*. 
+There are a few conditions that must be met for this interval to be valid.
+
+3.  For the confidence interval to be valid, the sample mean must be normally 
+distributed and have standard error $s / \sqrt{n}$. What conditions must be 
+met for this to be true?
+
+**_A: 1. The sample observations are independent. _**
+
+**_2. Sample mean calculated should contain at least 30 independent samples._**
+
+**_3. Data are not strongly skewed._**
+
+**_If above three conditions are met then distribution of the sample mean, is considered to be well approximated by a normal model._**
+
+
+## Confidence levels
+
+4.  What does "95% confidence" mean? If you're not sure, see Section 4.2.2.
+
+**_A: Using Ames dataset as an example, if we take 100 samples and create a normal distribution model for each sample, then take the actual population mean and plot it on these 100 samples, actual population mean would fall within 95 percentile on at least 95 percent of these samples. The rule where about 95% of observations are within 95% percentile is called 95% confidence._**
+
+In this case we have the luxury of knowing the true population mean since we 
+have data on the entire population. This value can be calculated using the 
+following command:
+
+```{r pop-mean, eval=TRUE}
+mean(population)
+```
+
+5.  Does your confidence interval capture the true average size of houses in 
+Ames? If you are working on this lab in a classroom, does your neighbor's 
+interval capture this value? 
+
+**_A: Formula to calculate confidence interval is $point\ estimate \pm z * standard\ error$, where z is percentile value from normal distribution table._**
+
+**_Yes, confidence interval captures true average size fo the houses in Ames._**
+
+```{r, echo=T}
+# initiate sample size, in our case we will be using 30 samples
+sample_30 = rep(NA, 30)
+
+area <- ames$Gr.Liv.Area
+
+for(i in 1:30) {
+  samp = sample(area,293)
+  sample_30[i] = mean(samp)
+}
+
+sample_mean = mean(sample_30)
+sample_sd = sd(sample_30)
+
+# Calcualte standard error standard deviation/square root of number of samples
+sample_err = sample_sd / sqrt(30)
+
+# 95% confidence interval
+confidence_min_value = sample_mean - 1.96 * sample_err
+confidence_max_value = sample_mean + 1.96 * sample_err
+
+# Actual population mean
+ames_average_area = mean(area)
+
+c(confidence_min_value, confidence_max_value)
+ames_average_area
+```
+
+
+6.  Each student in your class should have gotten a slightly different 
+confidence interval. What proportion of those intervals would you expect to 
+capture the true population mean? Why? If you are working in this lab in a 
+classroom, collect data on the intervals created by other students in the 
+class and calculate the proportion of intervals that capture the true 
+population mean.
+
+**_A: Lower limit and Upper limit for 95% percentile were captured using sample size of 60 and sample size of 30, in both cases average size fo the houses in Ames was within confidence interval._**
+
+```{r, echo=T}
+# initiate sample size, in our case we will be using 30 samples
+sample_60 = rep(NA, 60)
+
+area <- ames$Gr.Liv.Area
+
+for(i in 1:60) {
+  samp = sample(area,293)
+  sample_60[i] = mean(samp)
+}
+
+sample_mean = mean(sample_60)
+sample_sd = sd(sample_60)
+
+# Calcualte standard error standard deviation/square root of number of samples
+sample_err = sample_sd / sqrt(60)
+
+# 95% confidence interval
+confidence_min_value = sample_mean - 1.96 * sample_err
+confidence_max_value = sample_mean + 1.96 * sample_err
+
+# Actual population mean
+ames_average_area = mean(area)
+
+c(confidence_min_value, confidence_max_value)
+ames_average_area
+```
+
+Using R, we're going to recreate many samples to learn more about how sample 
+means and confidence intervals vary from one sample to another. *Loops* come 
+in handy here (If you are unfamiliar with loops, review the [Sampling Distribution Lab](http://htmlpreview.github.io/?https://github.com/andrewpbray/oiLabs/blob/master/sampling_distributions/sampling_distributions.html)).
+
+Here is the rough outline:
+
+-   Obtain a random sample.
+-   Calculate and store the sample's mean and standard deviation.
+-   Repeat steps (1) and (2) 50 times.
+-   Use these stored statistics to calculate many confidence intervals.
+
+
+But before we do all of this, we need to first create empty vectors where we 
+can save the means and standard deviations that will be calculated from each 
+sample. And while we're at it, let's also store the desired sample size as `n`.
+
+```{r set-up, eval=TRUE}
+samp_mean <- rep(NA, 50)
+samp_sd <- rep(NA, 50)
+n <- 60
+```
+
+Now we're ready for the loop where we calculate the means and standard deviations of 50 random samples.
+
+```{r loop, eval=TRUE, tidy = FALSE}
+for(i in 1:50){
+  samp <- sample(population, n) # obtain a sample of size n = 60 from the population
+  samp_mean[i] <- mean(samp)    # save sample mean in ith element of samp_mean
+  samp_sd[i] <- sd(samp)        # save sample sd in ith element of samp_sd
+}
+```
+
+Lastly, we construct the confidence intervals.
+
+```{r ci50, eval=TRUE}
+lower_vector <- samp_mean - 1.96 * samp_sd / sqrt(n) 
+upper_vector <- samp_mean + 1.96 * samp_sd / sqrt(n)
+```
+
+Lower bounds of these 50 confidence intervals are stored in `lower_vector`, 
+and the upper bounds are in `upper_vector`. Let's view the first interval.
+
+```{r first-interval, eval=TRUE}
+c(lower_vector[1], upper_vector[1])
+```
+
+* * *
+
+## On your own
+
+-   Using the following function (which was downloaded with the data set), 
+    plot all intervals. What proportion of your confidence intervals include 
+    the true population mean? Is this proportion exactly equal to the 
+    confidence level? If not, explain why.
+
+**_Fifty samples of size (n) = 60 were taken from Ames$Gr.Liv.Area database. Only 2 of these 50 intervals did not capture the true mean, $\mu$ = `r mean(population)` area._**
+
+```{r plot-ci, eval=TRUE}
+set.seed(5015)
+samp_mean <- rep(NA, 50)
+samp_sd <- rep(NA, 50)
+population <- ames$Gr.Liv.Area
+n <- 60
+for(i in 1:50){
+  samp = sample(population, n)
+  samp_mean[i] = mean(samp)
+  samp_sd[i] = sd(samp)
+}
+lower_vector <- samp_mean - 1.96 * samp_sd / sqrt(n) 
+upper_vector <- samp_mean + 1.96 * samp_sd / sqrt(n)
+
+# Standard Error
+sd_err = sd(samp_mean) / sqrt(50)
+
+plot_ci(lower_vector, upper_vector, mean(population))
+```
+
+**_At 95% confidence interval actual population mean should fall between the range of $`r round(mean(samp_mean))` \pm1.98 * `r round(sd_err,2)`$. In my observation `r 100 - (2/50)*100`% of the samples fall in that range. A confidence interval only provides an acceptable range of values for a point estimate._**
+
+-   Pick a confidence level of your choosing, provided it is not 95%. What is 
+    the appropriate critical value?
+
+```{r , eval=TRUE}
+set.seed(5115)
+samp_mean <- rep(NA, 50)
+samp_sd <- rep(NA, 50)
+population <- ames$Gr.Liv.Area
+n <- 60
+for(i in 1:50){
+  samp = sample(population, n)
+  samp_mean[i] = mean(samp)
+  samp_sd[i] = sd(samp)
+}
+
+lower_vector <- samp_mean - 1.96 * samp_sd / sqrt(n) 
+upper_vector <- samp_mean + 1.96 * samp_sd / sqrt(n)
+
+# Standard Error
+sd_err = sd(samp_mean) / sqrt(50)
+lower = round(mean(samp_mean) - 1.65 * sd_err,2)
+upper = round(mean(samp_mean) + 1.65 * sd_err,2)
+c(lower, upper)
+```
+
+**_At 90% confidence interval actual population mean should fall between the range of $`r round(mean(samp_mean))` \pm1.65 * `r round(sd_err,2)` = `r (c(lower, upper))`$._**
+
+-   Calculate 50 confidence intervals at the confidence level you chose in the 
+    previous question. You do not need to obtain new samples, simply calculate 
+    new intervals based on the sample means and standard deviations you have 
+    already collected. Using the `plot_ci` function, plot all intervals and 
+    calculate the proportion of intervals that include the true population 
+    mean. How does this percentage compare to the confidence level selected for
+    the intervals?
+    
+```{r, echo=T}
+plot_ci(lower_vector, upper_vector, mean(population))
+```
+
+**_At 90% confidence interval actual population mean should fall between the range of $`r round(mean(samp_mean))` \pm1.98 * `r round(sd_err,2)`$. In my observation `r 100 - (1/50)*100`% of the samples fall in that range._**
+
+<div id="license">
+This is a product of OpenIntro that is released under a [Creative Commons 
+Attribution-ShareAlike 3.0 Unported](http://creativecommons.org/licenses/by-sa/3.0).
+This lab was written for OpenIntro by Andrew Bray and Mine &Ccedil;etinkaya-Rundel.
+</div>
